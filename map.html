@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Generalization</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.js'></script>
+    <script src="geojson.js"></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+      body { margin:0; padding:0; }
+      #map { position:absolute; top:0; bottom:0; width:100%; }
+      .control {
+        position: relative;
+        height: 10px;
+        width: 300px;
+        top: 10px;
+        left: 10px;;
+        background-color: #191A1A;
+        border-radius: 5px 5px;
+        overflow-x: scroll;
+        cursor: pointer; 
+      }
+      .scroll {
+        width: 900%;
+        height: 100px;
+      }
+      kbd {
+        color: #ce2c69;
+        position: absolute;
+        left: 10px;
+        top: 30px;
+        font-size: 1.1em;
+      }
+      #point{
+        position: absolute;
+        top: 5px;
+        width: 130px;
+      }
+    </style>
+</head>
+<body>
+  <div id='map'></div>
+  <kbd>point_counts: 1500</kbd>
+  <input type="range" name="point" value="0" step="0.1" id="point" min="0" max="1000">
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoib2RkeSIsImEiOiJjanJld3R2ZnYwcGoyNGFyazJkdXA2OW5oIn0.ac5ztibRIaP3Laxf_wDHig';
+    var map = new mapboxgl.Map({
+      style: 'mapbox://styles/mapbox/dark-v9',
+      container: 'map',
+      center: [68.449019596, 42.1008273190001],
+      zoom: 7,
+    });
+    const coords = features.coordinates[0][0];
+    map.on('load', _ => {
+      map.addLayer({
+        'id': 'maine',
+        'type': 'fill',
+        'source': {
+          'type': 'geojson',
+          'data': {
+            'type': 'Feature',
+            'geometry': {
+              'type': 'Polygon',
+              'coordinates': [coords],
+            }
+          }
+        },
+        'paint': {
+          'fill-color': '#ce2c69',
+          'fill-opacity': 0.5,
+        }
+      });
+    });
+
+    document.getElementsByTagName('kbd')[0].innerHTML = `points-counts: ${coords.length}`;
+    document.getElementById('point').addEventListener('input', e => {
+      let value = e.target.value;
+      let epsilon = value / 100000;
+      const new_coords = simplify(coords, epsilon);
+      document.getElementsByTagName('kbd')[0].innerHTML = `points-counts: ${new_coords.length}`;
+      map.getSource('maine').setData({
+        'type': 'Feature',
+        'geometry': {
+          'type': 'Polygon',
+          'coordinates': [new_coords],
+        },
+      });
+    });
+  
+    const simplify = (points, epsilon) => {
+      const firstPoint = points[0];
+      const lastPoint = points[points.length-1];
+      if (points.length < 3) {
+        return points;
+      }
+      let index = -1;
+      let dist = 0;
+      for (let i = 1; i < points.length - 1; i++) {
+        const cDist = findPerpendicularDistance(points[i], firstPoint, lastPoint);
+        if (cDist > dist) {
+          dist = cDist;
+          index = i;
+        }
+      }
+      if (dist > epsilon) {
+        let l1 = points.slice(0, index + 1);
+        let l2 = points.slice(index);
+        let r1 = simplify(l1, epsilon);
+        let r2 = simplify(l2, epsilon);
+        const rs = r1.slice(0, r1.length-1).concat(r2);
+        return rs;
+      } else {
+        return [firstPoint, lastPoint];
+      }
+    }
+
+    function findPerpendicularDistance(p, p1,p2) {
+      let result;
+      if (p1[0] == p2[0]) {
+        result = Math.abs(p[0] - p1[0]);
+      } else {
+        const slope = (p2[1] - p1[1]) / (p2[0] - p1[0]);
+        const intercept = p1[1] - (slope * p1[0]);
+        result = Math.abs(slope * p[0] - p[1] + intercept) / Math.sqrt(Math.pow(slope, 2) + 1);
+      }
+      return result;
+    }
+
+  </script>
+</body>
+</html>

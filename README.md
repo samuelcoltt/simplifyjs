@@ -1,0 +1,1 @@
+# Douglas Peucker algorithm implementation
