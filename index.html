@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>simplifyjs</title>
+  <script src="resources/coordinates.js"></script>
+  <script src="src/clip.js"></script>
+  <script src="src/douglas_peucker.js"></script>
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.css' rel='stylesheet' />
+</head>
+<body>
+  <div id="map"></div>
+</body>
+  <style>
+    body { margin: 0; padding: 0; }
+    #map { position:absolute; top:0; bottom:0; width:100%; }
+  </style>
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoib2RkeSIsImEiOiJjanJld3R2ZnYwcGoyNGFyazJkdXA2OW5oIn0.ac5ztibRIaP3Laxf_wDHig';
+    const map = new mapboxgl.Map({
+      style: 'mapbox://styles/mapbox/dark-v9',
+      container: 'map',
+      center: [60.21156911841098, 46.87012739164845],
+      zoom: 8,
+    });
+
+    map.on('load', _ => {
+      coords[0] = clipLines(coords[0], bounds);
+      // cliped polygon 
+      map.addLayer({
+        'id': 'maine',
+        'type': 'fill',
+        'source': { 'type': 'geojson',
+          'data': {
+            'type': 'Feature',
+            'geometry': {
+              'type': 'Polygon',
+              'coordinates': coords,
+            }
+          }
+        },
+        'paint': {
+          // 'line-width': 3,
+          'fill-color': '#ce2c69',
+          'fill-opacity': 0.5,
+        }
+      });
+
+      //bounds
+      map.addLayer({
+        'id': 'maine2',
+        'type': 'fill',
+        'source': {
+          'type': 'geojson',
+          'data': {
+            'type': 'Feature',
+            'geometry': {
+              'type': 'Polygon',
+              'coordinates': [bounds],
+            }
+          }
+        },
+        'paint': {
+          'fill-color': '#fafafa',
+          'fill-opacity': 0.1,
+        }
+      });
+    });
+  </script>
+</html>
