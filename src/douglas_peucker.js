@@ -1,4 +1,4 @@
-function simplify(points, epsilon) {
+function simplify(points, epsilon = 0) {
   if (points.length < 3) {
     return points;
   }
