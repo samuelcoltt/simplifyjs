@@ -1,3 +1,3 @@
 # Douglas Peucker algorithm implementation
 ## mapboxgl
-https://samuelcoltz.github.io/simplifyjs/
+https://samuelcoltt.github.io/simplifyjs/
